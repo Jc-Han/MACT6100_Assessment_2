@@ -79,7 +79,7 @@ sum(is.na(sdata$TotalCharges))
 ```
 Noticed that 11 N/A values have been removed.
 
-It is sensible to remove "customerID" role, as they are unique identifier of each
+It is sensible to remove "customerID" column, as they are unique identifier of each
 of the customer and are not useful for prediction.
 ```{r}
 sdata <- sdata %>% dplyr::select(-customerID)
