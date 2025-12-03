@@ -1,0 +1,104 @@
+---
+title: "MACT6100 Assessment 2"
+author: "Junchi Han"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+options(width = 65)
+```
+
+# 1. Introduction
+
+## 1.1 Introduction to Customer Churn
+
+Customer churn is a major challenge in the telecommunications industry due to
+intense competition and low switching costs. Existing research shows that churn rates
+are directly related to the revenue. It is also suggested that retaining customers
+is more cost-effective than acquiring new ones. As a result, churn prediction
+has become a key application of machine learning and statistical modelling in
+both academia and industry.
+
+## 1.2 Background of Customer Churn Data
+
+Previous academic studies has demonstrated that classification methods can effectively
+predict customer churn using behavioural and demographic data. This study uses
+the Telco Customer Churn dataset from Kaggle, which contains rich information on
+customer demographics, service usage, contracts, and billing behaviour.
+The topic was chosen due to its strong real-world relevance and its suitability
+for comparing machine-learning techniques in a practical setting.
+
+## 1.3 Aim of the Research
+
+This study aims to address the following core questions: how do different models
+(GLM, Decision Tree, Neural Network, and Random Forest) compare in their performance
+for churn prediction, and which model performs best? In addition, within the Telco
+Customer Churn dataset, which features are most important for predicting whether
+a customer will churn?
+
+## 1.4 Methology & Models
+
+To address the research questions, this project applies a range of statistical
+and machine learning methods to build and compare predictive models. 
+
+The methodology includes data cleaning, exploratory data analysis (EDA), train-test
+split, and model performance evaluation.
+
+The models considered include the traditional statistical approach of GLM, as well
+as machine learning and deep learning models such as Decision Tree, Neural Network,
+and Random Forest.
+All models are evaluated and compared using performance metrics including ROC,
+AUC and accuracy, to provide a comprehensive assessment of their effectiveness in
+customer churn prediction.
+
+# 2. Data Loading & Exploring
+
+## 2.1 Load Customer Churn Data
+
+"Telco Customer Churn" data is downloaded from https://www.kaggle.com/datasets/blastchar/telco-customer-churn?resource=download
+
+```{r}
+library(tidyverse)
+sdata = read.csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
+str(sdata)
+```
+It is suggested that there are 7043 observations of  21 variables in the original churn data.
+The data are stored in different categories such as character, number or integer.
+
+It is also worthy check if data contains any N/A values.
+
+```{r}
+sum(is.na(sdata$TotalCharges))
+```
+
+```{r}
+sdata = na.omit(sdata)
+sum(is.na(sdata$TotalCharges))
+```
+Noticed that 11 N/A values have been removed.
+
+
+```{r}
+sdata <- sdata %>% dplyr::select(-customerID)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
