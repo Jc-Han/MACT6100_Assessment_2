@@ -1,5 +1,5 @@
 ---
-title: "MACT6100 Assessment 2"
+title: "Customer Churn Analysis Report"
 author: "Junchi Han"
 date: "`r Sys.Date()`"
 output: pdf_document
