@@ -64,6 +64,9 @@ customer churn prediction.
 
 ```{r}
 library(tidyverse)
+
+library(dplyr)
+
 sdata = read.csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
 str(sdata)
 ```
@@ -234,6 +237,8 @@ correlated with tenure (0.25), suggesting that how long a customer stays matters
 for total spending than the monthly price alone.
 
 
+
+
 # 3. Model Fitting and Analysis
 
 ## 3.1 Data Preparation for Model Training
@@ -370,6 +375,7 @@ of 0.801 and test AUC of 0.794.
 although its overall discrimination ability is weaker than the logistic GLM, 
 suggesting the tree captures non-linear patterns but with reduced predictive strength.
 
+
 ## 3.4 Neural Network Model Fitting
 
 In this section, a neural network model is fitted to capture complex non-linear 
@@ -441,9 +447,174 @@ Plot 10:
 - The small drop from training to test AUC suggests mild overfitting, but overall the model performs well in capturing complex non-linear patterns in customer churn.
 
 
+## 3.5 Random Forest Model Fitting
+
+In this section, a random forest model is fitted as an alternative method that
+combines multiple decision trees to improve predictive accuracy and robustness.
+It is chosen for its ability to capture complex non-linear patterns and provide
+measures of variable importance for understanding key drivers of churn.
+
+```{r}
+library(randomForest)   
+
+set.seed(183)
+
+rf_model <- randomForest(Churn ~ ., data=train, ntree=300)
+
+### predict churn rate
+rf_train_prob <- predict(rf_model, train, type="prob")[,2]
+
+rf_test_prob  <- predict(rf_model, test,  type="prob")[,2]
+
+
+plot_roc_with_auc("Plot 11: Random Forest",
+                  rf_train_prob, train$Churn,     
+                  rf_test_prob, test$Churn)      
+
+```
+Plot 10:
+
+- The random forest achieves very high training performance (AUC = 0.997) and 
+strong test performance (AUC = 0.834), indicating excellent fitting ability.
+
+- However, the large gap between training and test AUC suggests overfitting, 
+meaning the model captures training patterns extremely well but generalises less
+effectively to new data.
+
+
+# 4. Model Comparison and Conclusion
+
+## 4.1 Model Accuracy Comparison
+
+In the previous section, we have used different models to predict the customer churn data. 
+In this section, we will compare the model accuracy and suggest company's operational 
+strategy based on our analysis.
+
+```{r}
+# GLM accuracy
+glm_pred <- ifelse(glm_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
+
+glm_cm <- confusionMatrix(glm_pred, test$Churn)
+
+glm_acc <- glm_cm$overall["Accuracy"]
+
+# Decision Tree
+tree_pred <- ifelse(tree_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
+
+tree_cm <- confusionMatrix(tree_pred, test$Churn)
+
+tree_acc <- tree_cm$overall["Accuracy"]
+
+# Neural Network
+nn_pred <- ifelse(nn_test_prob > 0.5, 1, 0)
+
+nn_cm <- confusionMatrix(
+  factor(nn_pred, levels=c(0,1)),
+  factor(test_nn$Churn.Yes, levels=c(0,1))
+)
+
+nn_acc <- nn_cm$overall["Accuracy"]
+
+# Random Forest
+rf_pred <- ifelse(rf_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
+
+rf_cm <- confusionMatrix(rf_pred, test$Churn)
+
+rf_acc <- rf_cm$overall["Accuracy"]
 
 
 
+acc <- data.frame(
+  Model = c("GLM", "Decision Tree", "Neural Net", "Random Forest"),
+  Accuracy = c(glm_acc, tree_acc, nn_acc, rf_acc)
+)
+
+### Plot output
+ggplot(acc, aes(x = Model, y = Accuracy, fill = Model)) +
+  geom_col(color="black") +
+  geom_text(aes(label = sprintf("%.3f", Accuracy)),     # 数字标签格式
+            vjust = -0.5,                               # 标签位置（柱上方）
+            size = 5) +                                 # 字体大小
+  scale_fill_manual(values=c("#1f77b4","#ff7f0e","#2ca02c","#d62728")) +
+  labs(title = "Plot 11: Model Accuracy (Based on Confusion Matrix)",
+       y="Accuracy") +
+  theme_classic(base_size=14) +
+  ylim(0, 1.1)
+
+```
+Plot 11:
+
+- The GLM achieves the highest accuracy (0.813), closely followed by the random
+forest (0.808), while the neural network (0.791) and decision tree (0.787) perform slightly worse. 
+
+- Overall, all models show similar accuracy, with GLM providing the best balance 
+between performance and simplicity.
+
+
+## 4.2 Important Features to Investigate
+
+We also want to investigate what variables have the strongest effect on model's
+decision making. We use random forest model as an example.
+
+```{r}
+
+### Extract importance and convert into data frame
+rf_imp <- importance(rf_model)
+
+rf_imp_df <- data.frame(
+  Feature = rownames(rf_imp),
+  Importance = rf_imp[, 1]    # MeanDecreaseGini
+)
+
+### Rank importance
+rf_imp_df <- rf_imp_df %>% arrange(desc(Importance))
+
+
+### Plot output
+ggplot(rf_imp_df, aes(x = reorder(Feature, Importance), 
+                      y = Importance, 
+                      fill = Importance)) +
+  geom_col(color = "black") +
+  coord_flip() +     # 横向显示，特征名不会挤在一起
+  scale_fill_gradient(low="#1f77b4", high="#d62728") +  # Sci 颜色渐变
+  labs(title = "Plot 12: Random Forest Feature Importance",
+       x = "Feature",
+       y = "Mean Decrease in Gini") +
+  theme_classic(base_size = 14)
+
+
+```
+Plot 12:
+
+- The random forest identifies TotalCharges, MonthlyCharges, and tenure as the most
+important predictors of churn, indicating that customer spending and length of
+relationship are the dominant drivers of churn behaviour.
+
+- Contract type is also influential, while demographic and add-on service variables play a relatively smaller role.
+
+In this case, we can make suggestions to the Telecom company about how to reduce 
+customer churn rate:
+
+- Focus on high-charge customers and implement differentiated pricing or promotional
+strategies. TotalCharges and MonthlyCharges are the most influential predictors of churn,
+indicating that customers with higher charges are more likely to develop churn intentions. 
+The company may consider offering personalised discounts, bill reminders, loyalty rewards,
+or instalment payment options to high-spending customers in order to reduce the risk of churn 
+caused by price pressure.
+
+- Strengthen customer service support and improve the user experience.
+Service-quality-related variables such as TechSupport and OnlineSecurity rank highly in
+feature importance, demonstrating that service experience and technical support quality
+have a significant impact on customer retention. The company should improve response
+times, enhance technical support capabilities, and proactively provide services such as
+fault diagnosis and network optimisation to increase customer satisfaction.
+
+- Encourage customers to adopt long-term contracts to improve customer stability.
+Contract type shows relatively high importance, and short-term (month-to-month) customers
+are generally more prone to churn. Companies should promote long-term contracts 
+(such as one- or two-year plans) and offer additional incentives, including lower
+monthly fees, dedicated customer service, or device discounts, to increase customer 
+loyalty and reduce the overall churn rate.
 
 
 
