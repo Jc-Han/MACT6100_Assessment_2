@@ -324,11 +324,59 @@ plot_roc_with_auc("Plot 8: GLM",
 
 
 ```
-The logistic GLM shows good discriminative performance, with a training AUC of 
-0.847 and a test AUC of 0.852. The close agreement between training and test AUC
-indicates strong generalisation and no obvious evidence of overfitting, suggesting 
-that the model is reliable for predicting customer churn. It is sensible to use
-GLM model as baseline model for churn prediction.
+### Plot 8: 
+
+- The logistic GLM shows good discriminative performance, with a training AUC of 
+0.847 and a test AUC of 0.852. 
+
+- The close agreement between training and test AUC indicates strong generalisation
+and no obvious evidence of overfitting, suggesting  that the model is reliable for
+predicting customer churn. 
+
+- It is sensible to use GLM model as baseline model for churn prediction.
+
+## 3.3 Decision Tree Model Fitting
+
+In this section, a decision tree model is fitted as a non-parametric classification
+method that captures non-linear relationships and variable interactions in the
+churn data.
+
+It is chosen for its interpretability, ability to handle mixed data types, and 
+for providing a useful comparison to the parametric logistic GLM,
+allowing the performance of linear and non-linear models to be compared directly.
+
+```{r}
+
+library(rpart)   
+
+set.seed(183)
+
+tree_model <- rpart(Churn ~ ., data=train, method="class")
+
+
+tree_train_prob <- predict(tree_model, train, type="prob")[,2]
+
+
+tree_test_prob  <- predict(tree_model, test,  type="prob")[,2]
+
+
+plot_roc_with_auc("Plot 9: Decision Tree",
+                  tree_train_prob, train$Churn,  
+                  tree_test_prob,  test$Churn)    
+
+```
+### Plot 9: 
+
+- The decision tree model shows good predictive performance, with a training AUC
+of 0.801 and test AUC of 0.794. 
+
+- The close values indicate good generalisation with no obvious overfitting, 
+although its overall discrimination ability is weaker than the logistic GLM, 
+suggesting the tree captures non-linear patterns but with reduced predictive strength.
+
+## 3.4 Neural Network Model Fitting
+
+
 
 
 
