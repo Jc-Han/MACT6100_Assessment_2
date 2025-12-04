@@ -16,16 +16,18 @@ options(width = 65)
 
 Customer churn is a major challenge in the telecommunications industry due to
 intense competition and low switching costs. Existing research shows that churn rates
-are directly related to the revenue. It is also suggested that retaining customers
-is more cost-effective than acquiring new ones. As a result, churn prediction
-has become a key application of machine learning and statistical modelling in
-both academia and industry.
+are directly related to the revenue. 
+
+It is also suggested that retaining customers is more cost-effective than acquiring new ones.
+As a result, churn prediction has become a key application of machine learning and statistical
+modelling in both academia and industry.
 
 ## 1.2 Background of Customer Churn Data
 
 Previous academic studies has demonstrated that classification methods can effectively
-predict customer churn using behavioural and demographic data. This study uses
-the Telco Customer Churn dataset from Kaggle, which contains rich information on
+predict customer churn using behavioural and demographic data. 
+
+This study uses the Telco Customer Churn dataset from Kaggle, which contains rich information on
 customer demographics, service usage, contracts, and billing behaviour.
 The topic was chosen due to its strong real-world relevance and its suitability
 for comparing machine-learning techniques in a practical setting.
@@ -49,6 +51,7 @@ split, and model performance evaluation.
 The models considered include the traditional statistical approach of GLM, as well
 as machine learning and deep learning models such as Decision Tree, Neural Network,
 and Random Forest.
+
 All models are evaluated and compared using performance metrics including ROC,
 AUC and accuracy, to provide a comprehensive assessment of their effectiveness in
 customer churn prediction.
@@ -65,7 +68,7 @@ sdata = read.csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
 str(sdata)
 ```
 It is suggested that there are 7043 observations of  21 variables in the original churn data.
-The data are stored in different categories such as character, number or integer.
+The variables are stored in different categories such as character, number or integer.
 
 It is also worthy check if data contains any N/A values.
 
@@ -224,9 +227,46 @@ ggplot(cor_df, aes(x = Var1, y = Var2, fill = value)) +
 ```
 ### Plot 7:
 
-- The heatmap shows a strong positive correlation between tenure and total charges (0.83), indicating that customers who stay longer naturally accumulate higher total charges. 
+- The heatmap shows a strong positive correlation between tenure and total charges (0.83),
+indicating that customers who stay longer naturally accumulate higher total charges. 
 
-- Monthly charges are moderately correlated with total charges (0.65) but only weakly correlated with tenure (0.25), suggesting that how long a customer stays matters more for total spending than the monthly price alone.
+- Monthly charges are moderately correlated with total charges (0.65) but only weakly
+correlated with tenure (0.25), suggesting that how long a customer stays matters more
+for total spending than the monthly price alone.
+
+
+# 3. Model Fitting and Analysis
+
+## 3.1 Data Preparation for Model Training
+
+From the previous results we learned that the variables are stored in different forms. 
+In this case, we want the target variable "Churn" to be converted into a factor 
+to ensure that the subsequent classification models correctly recognise its categorical nature.
+
+We then use the createDataPartition function from the caret package to split the
+dataset into a training set and a test set in an 8:2 ratio, where the training set
+is used for model fitting and the test set for independent performance evaluation. 
+
+By setting a random seed (set.seed), the reproducibility of the data split is ensured, 
+so that the same partition is obtained across different runs. This process establishes 
+a consistent and reliable basis for the training and evaluation of all subsequent models.
+
+```{r}
+library(caret)
+
+
+sdata$Churn <- as.factor(sdata$Churn)
+
+# Train-Test split (8:2)
+set.seed(183)
+train_index <- createDataPartition(sdata$Churn, p = 0.8, list = FALSE)
+train <- sdata[train_index, ]
+test <- sdata[-train_index, ]
+```
+
+
+
+
 
 
 
