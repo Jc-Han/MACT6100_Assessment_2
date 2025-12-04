@@ -532,9 +532,9 @@ acc <- data.frame(
 ### Plot output
 ggplot(acc, aes(x = Model, y = Accuracy, fill = Model)) +
   geom_col(color="black") +
-  geom_text(aes(label = sprintf("%.3f", Accuracy)),     # 数字标签格式
-            vjust = -0.5,                               # 标签位置（柱上方）
-            size = 5) +                                 # 字体大小
+  geom_text(aes(label = sprintf("%.3f", Accuracy)),    
+            vjust = -0.5,                              
+            size = 5) +                               
   scale_fill_manual(values=c("#1f77b4","#ff7f0e","#2ca02c","#d62728")) +
   labs(title = "Plot 11: Model Accuracy (Based on Confusion Matrix)",
        y="Accuracy") +
@@ -575,8 +575,8 @@ ggplot(rf_imp_df, aes(x = reorder(Feature, Importance),
                       y = Importance, 
                       fill = Importance)) +
   geom_col(color = "black") +
-  coord_flip() +     # 横向显示，特征名不会挤在一起
-  scale_fill_gradient(low="#1f77b4", high="#d62728") +  # Sci 颜色渐变
+  coord_flip() +     
+  scale_fill_gradient(low="#1f77b4", high="#d62728") +  
   labs(title = "Plot 12: Random Forest Feature Importance",
        x = "Feature",
        y = "Mean Decrease in Gini") +
