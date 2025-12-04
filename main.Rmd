@@ -619,10 +619,46 @@ loyalty and reduce the overall churn rate.
 
 ## 4.3 Limitations of the Analysis
 
+The analysis has following known limitations of methods, as well as bias in the data
+set :
+
+- Single Train–Test Split: The analysis relies on a single 80:20 train–test split 
+for all models. This means the reported AUC and accuracy results may be sensitive 
+to the specific random split chosen. A different split could lead to noticeably
+different performance.
+
+- Multicollinearity bias: TotalCharges is mechanically linked to tenure and MonthlyCharges, 
+which creates strong multicollinearity. Although this does not affect tree-based models as much,
+it can bias coefficient estimates in GLM and inflate the perceived importance of 
+spending-related variables.
+
+- Limited Model Interpretability: Although random forest and neural networks provide
+strong predictive power, they are effectively “black-box” models. Unlike the GLM, 
+they offer limited transparency in explaining causal relationships, which restricts 
+their usefulness for managerial decision-making and regulatory reporting.
+
+- Class Imbalance: The dataset is imbalanced, with substantially more
+non-churned than churned customers. Accuracy alone may therefore be misleading, 
+since a model could achieve relatively high accuracy by simply predicting the majority class.
+
+- Dataset Bias: The Kaggle Telco Customer Churn dataset is not sourced from a specific
+real telecom company and may be partially simulated. As a result, it may not fully 
+reflect real operational customer behaviour, pricing structures, or competitive
+market conditions, limiting the external validity of the findings.
+
+- Geographical and Demographic Bias: The dataset lacks geographic identifiers and
+detailed socio-economic characteristics. This prevents the detection of regional 
+churn patterns and limits the model’s ability to capture location-based or income-related
+behavioural differences.
 
 
+## 4.4 Conclusion
 
+This study applied multiple classification models to predict customer churn using the Telco Customer Churn dataset. The results show that the GLM achieved the best overall balance between accuracy and generalisation, while the Random Forest provided strong predictive power but exhibited signs of overfitting.
 
+Key predictors of churn were identified as TotalCharges, MonthlyCharges, tenure, and contract type. These findings support practical strategies such as targeting high-charge customers, improving service quality, and promoting long-term contracts to reduce churn. 
+
+Overall, the study demonstrates the value of machine learning methods for effective churn prediction in the telecommunications industry. 
 
 
 
