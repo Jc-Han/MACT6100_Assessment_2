@@ -264,9 +264,71 @@ train <- sdata[train_index, ]
 test <- sdata[-train_index, ]
 ```
 
+We also want a function that can produce ROC curve for analitical purposes:
+
+```{r}
+library(pROC)
+
+plot_roc_with_auc <- function(model_name, prob_train, train_labels,
+                              prob_test, test_labels) {
+
+  # Train AUC
+  roc_train <- roc(train_labels, prob_train)
+  auc_train <- auc(roc_train)
+
+  # Test AUC
+  roc_test <- roc(test_labels, prob_test)
+  auc_test <- auc(roc_test)
+
+  # Plot
+  plot(roc_train,
+       col="#1f77b4", lwd=2,
+       main=paste(model_name, "ROC Curve"),
+       legacy.axes = TRUE)
+  lines(roc_test, col="#ff7f0e", lwd=2)
+
+  legend("bottomright",
+         legend=c(
+           paste("Train AUC =", round(auc_train, 3)),
+           paste("Test AUC  =", round(auc_test, 3))
+         ),
+         col=c("#1f77b4", "#ff7f0e"),
+         lwd=2)
+}
+
+```
+
+## 3.2 GLM: Logistic Regression Model Fitting
+
+In this section, a generalised linear model (GLM) with a logistic link function is
+used to model customer churn because the response variable is binary (churn vs non-churn).
+
+Logistic regression is well-suited for this setting as it estimates the probability
+of churn while allowing the effect of multiple explanatory variables to be quantified
+and interpreted. It is chosen for its simplicity and interpretability,
+making it an ideal baseline model for churn prediction.
+
+```{r}
+# Train GLM
+set.seed(183)
+glm_model <- glm(Churn ~ ., data=train, family=binomial)
+
+# Predictions
+glm_train_prob <- predict(glm_model, train, type="response")
+glm_test_prob  <- predict(glm_model, test,  type="response")
+
+# ROC
+plot_roc_with_auc("Plot 8: GLM",
+                  glm_train_prob, train$Churn,
+                  glm_test_prob, test$Churn)
 
 
-
+```
+The logistic GLM shows good discriminative performance, with a training AUC of 
+0.847 and a test AUC of 0.852. The close agreement between training and test AUC
+indicates strong generalisation and no obvious evidence of overfitting, suggesting 
+that the model is reliable for predicting customer churn. It is sensible to use
+GLM model as baseline model for churn prediction.
 
 
 
