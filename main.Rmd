@@ -16,16 +16,18 @@ options(width = 65)
 
 Customer churn is a major challenge in the telecommunications industry due to
 intense competition and low switching costs. Existing research shows that churn rates
-are directly related to the revenue. It is also suggested that retaining customers
-is more cost-effective than acquiring new ones. As a result, churn prediction
-has become a key application of machine learning and statistical modelling in
-both academia and industry.
+are directly related to the revenue. 
+
+It is also suggested that retaining customers is more cost-effective than acquiring new ones.
+As a result, churn prediction has become a key application of machine learning and statistical
+modelling in both academia and industry.
 
 ## 1.2 Background of Customer Churn Data
 
 Previous academic studies has demonstrated that classification methods can effectively
-predict customer churn using behavioural and demographic data. This study uses
-the Telco Customer Churn dataset from Kaggle, which contains rich information on
+predict customer churn using behavioural and demographic data. 
+
+This study uses the Telco Customer Churn dataset from Kaggle, which contains rich information on
 customer demographics, service usage, contracts, and billing behaviour.
 The topic was chosen due to its strong real-world relevance and its suitability
 for comparing machine-learning techniques in a practical setting.
@@ -49,6 +51,7 @@ split, and model performance evaluation.
 The models considered include the traditional statistical approach of GLM, as well
 as machine learning and deep learning models such as Decision Tree, Neural Network,
 and Random Forest.
+
 All models are evaluated and compared using performance metrics including ROC,
 AUC and accuracy, to provide a comprehensive assessment of their effectiveness in
 customer churn prediction.
@@ -65,7 +68,7 @@ sdata = read.csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
 str(sdata)
 ```
 It is suggested that there are 7043 observations of  21 variables in the original churn data.
-The data are stored in different categories such as character, number or integer.
+The variables are stored in different categories such as character, number or integer.
 
 It is also worthy check if data contains any N/A values.
 
@@ -80,13 +83,252 @@ sum(is.na(sdata$TotalCharges))
 Noticed that 11 N/A values have been removed.
 
 It is sensible to remove "customerID" column, as they are unique identifier of each
-of the customer and are not useful for prediction.
+of the customers and are not useful for prediction.
 ```{r}
 sdata <- sdata %>% dplyr::select(-customerID)
 ```
 
+## 2.2 Exploratory Data Analysis on Churn Data
+
+After initial data explore, we want to have understanding of how the elements
+can be related to each other. Graph is a good method to help to build understanding
+by visualising the correlations.
+
+```{r}
+
+library(ggplot2)
+library(corrplot)
+
+ggplot(sdata, aes(Churn, fill = Churn)) + 
+  geom_bar(color="black") +
+   scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 1: Churn Distribution",
+       y = "Count") +
+  theme_classic(base_size = 14)
+```
+### Plot 1: 
+
+- The amount of customer classified as "non-churned" is almost triple than
+those classified as "churn".
+
+```{r}
+ggplot(sdata, aes(Churn, tenure, fill = Churn)) +
+  geom_boxplot(color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 2: Tenure by Churn Status") +
+  theme_classic(base_size = 14)
+```
+### Plot 2: 
+
+- The tenure distribution of churned customers (Yes) is clearly lower,
+with most concentrated among short-term users (0–20 months). In contrast,
+non-churned customers generally have much longer usage periods, and long-term
+customers have a lower risk of churn. 
+
+- This indicates that the shorter the usage
+period, the more likely customers are to churn, reflecting the characteristics
+of “new users being less stable and having lower loyalty”.
+
+```{r}
+ggplot(sdata, aes(Churn, MonthlyCharges, fill = Churn)) +
+  geom_boxplot(color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 3: Monthly Charges by Churn Status") +
+  theme_classic(base_size = 14)
+```
+### Plot 3: 
+
+ - Customers who churn tend to have higher monthly charges than those who
+remain, as shown by the higher median for the churned group. 
+
+- Although there is some overlap between the two groups, the overall distribution is shifted upward
+for churned customers, suggesting that higher prices are associated with a greater
+likelihood of churn.
 
 
+```{r}
+ggplot(sdata, aes(Churn, TotalCharges, fill = Churn)) +
+  geom_boxplot(color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 4: Total Charges by Churn Status",
+       x = "Churn",
+       y = "Total Charges") +
+  theme_classic(base_size = 14)
+```
+### Plot 4: 
+
+- Customers who did not churn have much higher total charges on average,
+reflecting longer tenure, while churned customers generally show low total charges,
+indicating early-stage departure. 
+
+- However, the churned group contains several
+high-value outliers, showing that although rare, some long-standing, high-spending
+customers still choose to leave, possibly due to dissatisfaction or external competition.
+
+```{r}
+ggplot(sdata, aes(Contract, fill = Churn)) +
+  geom_bar(position = "fill", color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#d62728")) +
+  labs(title = "Plot 5: Churn Rate by Contract Type",
+       y = "Proportion") +
+  theme_classic(base_size = 14)
+```
+### Plot 5: 
+
+- Customers on month-to-month contracts exhibit the highest churn rate,
+while those on one-year and especially two-year contracts are far more likely
+to remain. 
+
+- This indicates that longer contract durations are strongly associated
+with improved customer retention, highlighting contract length as a key driver of churn.
+
+```{r}
+ggplot(sdata, aes(InternetService, fill = Churn)) +
+  geom_bar(position = "fill", color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#d62728")) +
+  labs(title = "Plot 6: Churn Rate by Internet Service Type",
+       y = "Proportion") +
+  theme_classic(base_size = 14)
+
+
+
+```
+### Plot 6:
+
+- Customers with fiber optic internet have the highest churn rate, while DSL
+users show moderate churn, and customers with no internet service have the lowest churn.
+
+- This suggests that service type is strongly associated with churn, with fiber
+optic customers being particularly at risk.
+
+
+```{r}
+library(reshape2)
+
+numdata <- sdata
+
+numdata$TotalCharges <- as.numeric(numdata$TotalCharges)
+
+num_vars <- numdata[, c("tenure", "MonthlyCharges", "TotalCharges")]
+
+cor_mat <- cor(num_vars, use = "complete.obs")
+cor_mat
+
+cor_df <- melt(cor_mat)
+
+ggplot(cor_df, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2))) +
+  scale_fill_gradient2(limits = c(-1, 1)) +
+  labs(title = "Plot 7: Correlation Heatmap",
+       x = "", y = "", fill = "Correlation") +
+  theme_minimal()
+
+```
+### Plot 7:
+
+- The heatmap shows a strong positive correlation between tenure and total charges (0.83),
+indicating that customers who stay longer naturally accumulate higher total charges. 
+
+- Monthly charges are moderately correlated with total charges (0.65) but only weakly
+correlated with tenure (0.25), suggesting that how long a customer stays matters more
+for total spending than the monthly price alone.
+
+
+# 3. Model Fitting and Analysis
+
+## 3.1 Data Preparation for Model Training
+
+From the previous results we learned that the variables are stored in different forms. 
+In this case, we want the target variable "Churn" to be converted into a factor 
+to ensure that the subsequent classification models correctly recognise its categorical nature.
+
+We then use the createDataPartition function from the caret package to split the
+dataset into a training set and a test set in an 8:2 ratio, where the training set
+is used for model fitting and the test set for independent performance evaluation. 
+
+By setting a random seed (set.seed), the reproducibility of the data split is ensured, 
+so that the same partition is obtained across different runs. This process establishes 
+a consistent and reliable basis for the training and evaluation of all subsequent models.
+
+```{r}
+library(caret)
+
+
+sdata$Churn <- as.factor(sdata$Churn)
+
+# Train-Test split (8:2)
+set.seed(183)
+train_index <- createDataPartition(sdata$Churn, p = 0.8, list = FALSE)
+train <- sdata[train_index, ]
+test <- sdata[-train_index, ]
+```
+
+We also want a function that can produce ROC curve for analitical purposes:
+
+```{r}
+library(pROC)
+
+plot_roc_with_auc <- function(model_name, prob_train, train_labels,
+                              prob_test, test_labels) {
+
+  # Train AUC
+  roc_train <- roc(train_labels, prob_train)
+  auc_train <- auc(roc_train)
+
+  # Test AUC
+  roc_test <- roc(test_labels, prob_test)
+  auc_test <- auc(roc_test)
+
+  # Plot
+  plot(roc_train,
+       col="#1f77b4", lwd=2,
+       main=paste(model_name, "ROC Curve"),
+       legacy.axes = TRUE)
+  lines(roc_test, col="#ff7f0e", lwd=2)
+
+  legend("bottomright",
+         legend=c(
+           paste("Train AUC =", round(auc_train, 3)),
+           paste("Test AUC  =", round(auc_test, 3))
+         ),
+         col=c("#1f77b4", "#ff7f0e"),
+         lwd=2)
+}
+
+```
+
+## 3.2 GLM: Logistic Regression Model Fitting
+
+In this section, a generalised linear model (GLM) with a logistic link function is
+used to model customer churn because the response variable is binary (churn vs non-churn).
+
+Logistic regression is well-suited for this setting as it estimates the probability
+of churn while allowing the effect of multiple explanatory variables to be quantified
+and interpreted. It is chosen for its simplicity and interpretability,
+making it an ideal baseline model for churn prediction.
+
+```{r}
+# Train GLM
+set.seed(183)
+glm_model <- glm(Churn ~ ., data=train, family=binomial)
+
+# Predictions
+glm_train_prob <- predict(glm_model, train, type="response")
+glm_test_prob  <- predict(glm_model, test,  type="response")
+
+# ROC
+plot_roc_with_auc("Plot 8: GLM",
+                  glm_train_prob, train$Churn,
+                  glm_test_prob, test$Churn)
+
+
+```
+The logistic GLM shows good discriminative performance, with a training AUC of 
+0.847 and a test AUC of 0.852. The close agreement between training and test AUC
+indicates strong generalisation and no obvious evidence of overfitting, suggesting 
+that the model is reliable for predicting customer churn. It is sensible to use
+GLM model as baseline model for churn prediction.
 
 
 
