@@ -107,7 +107,7 @@ ggplot(sdata, aes(Churn, fill = Churn)) +
        y = "Count") +
   theme_classic(base_size = 14)
 ```
-### Plot 1: 
+Plot 1: 
 
 - The amount of customer classified as "non-churned" is almost triple than
 those classified as "churn".
@@ -119,7 +119,7 @@ ggplot(sdata, aes(Churn, tenure, fill = Churn)) +
   labs(title = "Plot 2: Tenure by Churn Status") +
   theme_classic(base_size = 14)
 ```
-### Plot 2: 
+Plot 2: 
 
 - The tenure distribution of churned customers (Yes) is clearly lower,
 with most concentrated among short-term users (0–20 months). In contrast,
@@ -137,7 +137,7 @@ ggplot(sdata, aes(Churn, MonthlyCharges, fill = Churn)) +
   labs(title = "Plot 3: Monthly Charges by Churn Status") +
   theme_classic(base_size = 14)
 ```
-### Plot 3: 
+Plot 3: 
 
  - Customers who churn tend to have higher monthly charges than those who
 remain, as shown by the higher median for the churned group. 
@@ -156,7 +156,7 @@ ggplot(sdata, aes(Churn, TotalCharges, fill = Churn)) +
        y = "Total Charges") +
   theme_classic(base_size = 14)
 ```
-### Plot 4: 
+Plot 4: 
 
 - Customers who did not churn have much higher total charges on average,
 reflecting longer tenure, while churned customers generally show low total charges,
@@ -174,7 +174,7 @@ ggplot(sdata, aes(Contract, fill = Churn)) +
        y = "Proportion") +
   theme_classic(base_size = 14)
 ```
-### Plot 5: 
+Plot 5: 
 
 - Customers on month-to-month contracts exhibit the highest churn rate,
 while those on one-year and especially two-year contracts are far more likely
@@ -192,7 +192,7 @@ ggplot(sdata, aes(InternetService, fill = Churn)) +
   theme_classic(base_size = 14)
 
 ```
-### Plot 6:
+Plot 6:
 
 - Customers with fiber optic internet have the highest churn rate, while DSL
 users show moderate churn, and customers with no internet service have the lowest churn.
@@ -224,7 +224,7 @@ ggplot(cor_df, aes(x = Var1, y = Var2, fill = value)) +
   theme_minimal()
 
 ```
-### Plot 7:
+Plot 7:
 
 - The heatmap shows a strong positive correlation between tenure and total charges (0.83),
 indicating that customers who stay longer naturally accumulate higher total charges. 
@@ -323,7 +323,7 @@ plot_roc_with_auc("Plot 8: GLM",
 
 
 ```
-### Plot 8: 
+Plot 8: 
 
 - The logistic GLM shows good discriminative performance, with a training AUC of 
 0.847 and a test AUC of 0.852. 
@@ -361,7 +361,7 @@ plot_roc_with_auc("Plot 9: Decision Tree",
                   tree_test_prob,  test$Churn)    
 
 ```
-### Plot 9: 
+Plot 9: 
 
 - The decision tree model shows good predictive performance, with a training AUC
 of 0.801 and test AUC of 0.794. 
@@ -430,11 +430,11 @@ nn_test_prob  <- predict(nn_model, test_nn)
 
 ### Plot output
 plot_roc_with_auc("Plot 10: Neural Network",
-                  nn_train_prob, train_nn$Churn.Yes,   # 训练集 ROC + AUC
-                  nn_test_prob,  test_nn$Churn.Yes)    # 测试集 ROC + AUC
+                  nn_train_prob, train_nn$Churn.Yes,   
+                  nn_test_prob,  test_nn$Churn.Yes)    
 
 ```
-### Plot 10:
+Plot 10:
 
 - The neural network achieves strong predictive performance with a training AUC of 0.854 and test AUC of 0.825, indicating good discrimination ability. 
 
