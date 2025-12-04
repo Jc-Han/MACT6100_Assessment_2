@@ -92,7 +92,6 @@ can be related to each other. Graph is a good method to help to build understand
 by visualising the correlations.
 
 ```{r}
-install.packages("corrplot")
 
 library(ggplot2)
 library(corrplot)
@@ -104,7 +103,9 @@ ggplot(sdata, aes(Churn, fill = Churn)) +
        y = "Count") +
   theme_classic(base_size = 14)
 ```
-Plot 1: The amount of customer classified as "non-churned" is almost triple than
+### Plot 1: 
+
+- The amount of customer classified as "non-churned" is almost triple than
 those classified as "churn".
 
 ```{r}
@@ -114,10 +115,14 @@ ggplot(sdata, aes(Churn, tenure, fill = Churn)) +
   labs(title = "Plot 2: Tenure by Churn Status") +
   theme_classic(base_size = 14)
 ```
-Plot 2: The tenure distribution of churned customers (Yes) is clearly lower,
+### Plot 2: 
+
+- The tenure distribution of churned customers (Yes) is clearly lower,
 with most concentrated among short-term users (0–20 months). In contrast,
 non-churned customers generally have much longer usage periods, and long-term
-customers have a lower risk of churn. This indicates that the shorter the usage
+customers have a lower risk of churn. 
+
+- This indicates that the shorter the usage
 period, the more likely customers are to churn, reflecting the characteristics
 of “new users being less stable and having lower loyalty”.
 
@@ -128,9 +133,12 @@ ggplot(sdata, aes(Churn, MonthlyCharges, fill = Churn)) +
   labs(title = "Plot 3: Monthly Charges by Churn Status") +
   theme_classic(base_size = 14)
 ```
-Plot 3: Customers who churn tend to have higher monthly charges than those who
-remain, as shown by the higher median for the churned group. Although there is
-some overlap between the two groups, the overall distribution is shifted upward
+### Plot 3: 
+
+ - Customers who churn tend to have higher monthly charges than those who
+remain, as shown by the higher median for the churned group. 
+
+- Although there is some overlap between the two groups, the overall distribution is shifted upward
 for churned customers, suggesting that higher prices are associated with a greater
 likelihood of churn.
 
@@ -144,21 +152,34 @@ ggplot(sdata, aes(Churn, TotalCharges, fill = Churn)) +
        y = "Total Charges") +
   theme_classic(base_size = 14)
 ```
-Plot 4: Customers who did not churn have much higher total charges on average,
+### Plot 4: 
+
+- Customers who did not churn have much higher total charges on average,
 reflecting longer tenure, while churned customers generally show low total charges,
-indicating early-stage departure. However, the churned group contains several
+indicating early-stage departure. 
+
+- However, the churned group contains several
 high-value outliers, showing that although rare, some long-standing, high-spending
 customers still choose to leave, possibly due to dissatisfaction or external competition.
 
-
+```{r}
 ggplot(sdata, aes(Contract, fill = Churn)) +
   geom_bar(position = "fill", color="black") +
   scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#d62728")) +
   labs(title = "Plot 5: Churn Rate by Contract Type",
        y = "Proportion") +
   theme_classic(base_size = 14)
+```
+### Plot 5: 
 
+- Customers on month-to-month contracts exhibit the highest churn rate,
+while those on one-year and especially two-year contracts are far more likely
+to remain. 
 
+- This indicates that longer contract durations are strongly associated
+with improved customer retention, highlighting contract length as a key driver of churn.
+
+```{r}
 ggplot(sdata, aes(InternetService, fill = Churn)) +
   geom_bar(position = "fill", color="black") +
   scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#d62728")) +
@@ -169,7 +190,43 @@ ggplot(sdata, aes(InternetService, fill = Churn)) +
 
 
 ```
+### Plot 6:
 
+- Customers with fiber optic internet have the highest churn rate, while DSL
+users show moderate churn, and customers with no internet service have the lowest churn.
+
+- This suggests that service type is strongly associated with churn, with fiber
+optic customers being particularly at risk.
+
+
+```{r}
+library(reshape2)
+
+numdata <- sdata
+
+numdata$TotalCharges <- as.numeric(numdata$TotalCharges)
+
+num_vars <- numdata[, c("tenure", "MonthlyCharges", "TotalCharges")]
+
+cor_mat <- cor(num_vars, use = "complete.obs")
+cor_mat
+
+cor_df <- melt(cor_mat)
+
+ggplot(cor_df, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2))) +
+  scale_fill_gradient2(limits = c(-1, 1)) +
+  labs(title = "Plot 7: Correlation Heatmap",
+       x = "", y = "", fill = "Correlation") +
+  theme_minimal()
+
+```
+### Plot 7:
+
+- The heatmap shows a strong positive correlation between tenure and total charges (0.83), indicating that customers who stay longer naturally accumulate higher total charges. 
+
+- Monthly charges are moderately correlated with total charges (0.65) but only weakly correlated with tenure (0.25), suggesting that how long a customer stays matters more for total spending than the monthly price alone.
 
 
 
