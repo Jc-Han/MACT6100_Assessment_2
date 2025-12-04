@@ -64,6 +64,9 @@ customer churn prediction.
 
 ```{r}
 library(tidyverse)
+
+library(dplyr)
+
 sdata = read.csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
 str(sdata)
 ```
@@ -97,6 +100,7 @@ by visualising the correlations.
 ```{r}
 
 library(ggplot2)
+
 library(corrplot)
 
 ggplot(sdata, aes(Churn, fill = Churn)) + 
@@ -106,7 +110,7 @@ ggplot(sdata, aes(Churn, fill = Churn)) +
        y = "Count") +
   theme_classic(base_size = 14)
 ```
-### Plot 1: 
+Plot 1: 
 
 - The amount of customer classified as "non-churned" is almost triple than
 those classified as "churn".
@@ -118,7 +122,7 @@ ggplot(sdata, aes(Churn, tenure, fill = Churn)) +
   labs(title = "Plot 2: Tenure by Churn Status") +
   theme_classic(base_size = 14)
 ```
-### Plot 2: 
+Plot 2: 
 
 - The tenure distribution of churned customers (Yes) is clearly lower,
 with most concentrated among short-term users (0–20 months). In contrast,
@@ -136,7 +140,7 @@ ggplot(sdata, aes(Churn, MonthlyCharges, fill = Churn)) +
   labs(title = "Plot 3: Monthly Charges by Churn Status") +
   theme_classic(base_size = 14)
 ```
-### Plot 3: 
+Plot 3: 
 
  - Customers who churn tend to have higher monthly charges than those who
 remain, as shown by the higher median for the churned group. 
@@ -155,7 +159,7 @@ ggplot(sdata, aes(Churn, TotalCharges, fill = Churn)) +
        y = "Total Charges") +
   theme_classic(base_size = 14)
 ```
-### Plot 4: 
+Plot 4: 
 
 - Customers who did not churn have much higher total charges on average,
 reflecting longer tenure, while churned customers generally show low total charges,
@@ -173,7 +177,7 @@ ggplot(sdata, aes(Contract, fill = Churn)) +
        y = "Proportion") +
   theme_classic(base_size = 14)
 ```
-### Plot 5: 
+Plot 5: 
 
 - Customers on month-to-month contracts exhibit the highest churn rate,
 while those on one-year and especially two-year contracts are far more likely
@@ -190,10 +194,8 @@ ggplot(sdata, aes(InternetService, fill = Churn)) +
        y = "Proportion") +
   theme_classic(base_size = 14)
 
-
-
 ```
-### Plot 6:
+Plot 6:
 
 - Customers with fiber optic internet have the highest churn rate, while DSL
 users show moderate churn, and customers with no internet service have the lowest churn.
@@ -225,7 +227,7 @@ ggplot(cor_df, aes(x = Var1, y = Var2, fill = value)) +
   theme_minimal()
 
 ```
-### Plot 7:
+Plot 7:
 
 - The heatmap shows a strong positive correlation between tenure and total charges (0.83),
 indicating that customers who stay longer naturally accumulate higher total charges. 
@@ -233,6 +235,8 @@ indicating that customers who stay longer naturally accumulate higher total char
 - Monthly charges are moderately correlated with total charges (0.65) but only weakly
 correlated with tenure (0.25), suggesting that how long a customer stays matters more
 for total spending than the monthly price alone.
+
+
 
 
 # 3. Model Fitting and Analysis
@@ -257,7 +261,7 @@ library(caret)
 
 sdata$Churn <- as.factor(sdata$Churn)
 
-# Train-Test split (8:2)
+### Train-Test split (8:2)
 set.seed(183)
 train_index <- createDataPartition(sdata$Churn, p = 0.8, list = FALSE)
 train <- sdata[train_index, ]
@@ -272,15 +276,15 @@ library(pROC)
 plot_roc_with_auc <- function(model_name, prob_train, train_labels,
                               prob_test, test_labels) {
 
-  # Train AUC
+  ### Train AUC
   roc_train <- roc(train_labels, prob_train)
   auc_train <- auc(roc_train)
 
-  # Test AUC
+  ### Test AUC
   roc_test <- roc(test_labels, prob_test)
   auc_test <- auc(roc_test)
 
-  # Plot
+  ### Plot
   plot(roc_train,
        col="#1f77b4", lwd=2,
        main=paste(model_name, "ROC Curve"),
@@ -309,39 +313,354 @@ and interpreted. It is chosen for its simplicity and interpretability,
 making it an ideal baseline model for churn prediction.
 
 ```{r}
-# Train GLM
+### Train GLM
 set.seed(183)
 glm_model <- glm(Churn ~ ., data=train, family=binomial)
 
-# Predictions
+### Predictions
 glm_train_prob <- predict(glm_model, train, type="response")
 glm_test_prob  <- predict(glm_model, test,  type="response")
 
-# ROC
+### ROC
 plot_roc_with_auc("Plot 8: GLM",
                   glm_train_prob, train$Churn,
                   glm_test_prob, test$Churn)
 
 
 ```
-The logistic GLM shows good discriminative performance, with a training AUC of 
-0.847 and a test AUC of 0.852. The close agreement between training and test AUC
-indicates strong generalisation and no obvious evidence of overfitting, suggesting 
-that the model is reliable for predicting customer churn. It is sensible to use
-GLM model as baseline model for churn prediction.
+Plot 8: 
+
+- The logistic GLM shows good discriminative performance, with a training AUC of 
+0.847 and a test AUC of 0.852. 
+
+- The close agreement between training and test AUC indicates strong generalisation
+and no obvious evidence of overfitting, suggesting  that the model is reliable for
+predicting customer churn. 
+
+- It is sensible to use GLM model as baseline model for churn prediction.
+
+## 3.3 Decision Tree Model Fitting
+
+In this section, a decision tree model is fitted as a non-parametric classification
+method that captures non-linear relationships and variable interactions in the
+churn data. It is chosen for its interpretability, ability to handle mixed data types, and 
+for providing a useful comparison to the parametric logistic GLM,
+allowing the performance of linear and non-linear models to be compared directly.
+
+```{r}
+
+library(rpart)   
+
+set.seed(183)
+
+tree_model <- rpart(Churn ~ ., data=train, method="class")
+
+### Train-test split
+tree_train_prob <- predict(tree_model, train, type="prob")[,2]
+
+tree_test_prob  <- predict(tree_model, test,  type="prob")[,2]
+
+
+plot_roc_with_auc("Plot 9: Decision Tree",
+                  tree_train_prob, train$Churn,  
+                  tree_test_prob,  test$Churn)    
+
+```
+Plot 9: 
+
+- The decision tree model shows good predictive performance, with a training AUC
+of 0.801 and test AUC of 0.794. 
+
+- The close values indicate good generalisation with no obvious overfitting, 
+although its overall discrimination ability is weaker than the logistic GLM, 
+suggesting the tree captures non-linear patterns but with reduced predictive strength.
+
+
+## 3.4 Neural Network Model Fitting
+
+In this section, a neural network model is fitted to capture complex non-linear 
+relationships and interactions among the customer features that simpler models 
+may not fully represent. It is chosen for its flexibility and strong predictive 
+capability, providing a powerful contrast to traditional models such as logistic
+regression and decision trees for churn prediction.
+
+```{r}
+library(nnet)   
+
+library(caret)  
+
+### Introduce dummy variables
+dmy <- dummyVars(" ~ .", data=train)              
+
+
+### Train-test split
+train_nn <- data.frame(predict(dmy, newdata=train))  
+
+test_nn  <- data.frame(predict(dmy, newdata=test))  
+
+
+### Standardise the scale of the input variables, to make the model less sensitive
+pre <- preProcess(train_nn, method=c("center", "scale"))
+
+train_nn <- predict(pre, train_nn)    
+
+test_nn  <- predict(pre, test_nn)     
+
+### Remove Churn.No generated by dummyVars
+train_nn = train_nn %>% dplyr::select(-Churn.No)
+
+test_nn  = test_nn  %>% dplyr::select(-Churn.No)
+
+
+### Yes → 1, No → 0
+train_nn$Churn.Yes <- ifelse(train$Churn == "Yes", 1, 0)
+
+test_nn$Churn.Yes  <- ifelse(test$Churn == "Yes", 1, 0)
+
+### Train neuro network
+set.seed(183)
+nn_model <- nnet(
+  Churn.Yes ~ .,     
+  data=train_nn,      
+  size=5,             
+  maxit=300,          
+  linout=FALSE,       
+  decay=1e-4,         
+  trace=FALSE         
+)
+
+
+### Predict the churn rate
+nn_train_prob <- predict(nn_model, train_nn)  
+nn_test_prob  <- predict(nn_model, test_nn)   
+
+### Plot output
+plot_roc_with_auc("Plot 10: Neural Network",
+                  nn_train_prob, train_nn$Churn.Yes,   
+                  nn_test_prob,  test_nn$Churn.Yes)    
+
+```
+Plot 10:
+
+- The neural network achieves strong predictive performance with a training AUC of 0.854 and test AUC of 0.825, indicating good discrimination ability. 
+
+- The small drop from training to test AUC suggests mild overfitting, but overall the model performs well in capturing complex non-linear patterns in customer churn.
+
+
+## 3.5 Random Forest Model Fitting
+
+In this section, a random forest model is fitted as an alternative method that
+combines multiple decision trees to improve predictive accuracy and robustness.
+It is chosen for its ability to capture complex non-linear patterns and provide
+measures of variable importance for understanding key drivers of churn.
+
+```{r}
+library(randomForest)   
+
+set.seed(183)
+
+rf_model <- randomForest(Churn ~ ., data=train, ntree=300)
+
+### predict churn rate
+rf_train_prob <- predict(rf_model, train, type="prob")[,2]
+
+rf_test_prob  <- predict(rf_model, test,  type="prob")[,2]
+
+
+plot_roc_with_auc("Plot 11: Random Forest",
+                  rf_train_prob, train$Churn,     
+                  rf_test_prob, test$Churn)      
+
+```
+Plot 10:
+
+- The random forest achieves very high training performance (AUC = 0.997) and 
+strong test performance (AUC = 0.834), indicating excellent fitting ability.
+
+- However, the large gap between training and test AUC suggests overfitting, 
+meaning the model captures training patterns extremely well but generalises less
+effectively to new data.
+
+
+# 4. Model Comparison and Conclusion
+
+## 4.1 Model Accuracy Comparison
+
+In the previous section, we have used different models to predict the customer churn data. 
+In this section, we will compare the model accuracy and suggest company's operational 
+strategy based on our analysis.
+
+```{r}
+# GLM accuracy
+glm_pred <- ifelse(glm_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
+
+glm_cm <- confusionMatrix(glm_pred, test$Churn)
+
+glm_acc <- glm_cm$overall["Accuracy"]
+
+# Decision Tree
+tree_pred <- ifelse(tree_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
+
+tree_cm <- confusionMatrix(tree_pred, test$Churn)
+
+tree_acc <- tree_cm$overall["Accuracy"]
+
+# Neural Network
+nn_pred <- ifelse(nn_test_prob > 0.5, 1, 0)
+
+nn_cm <- confusionMatrix(
+  factor(nn_pred, levels=c(0,1)),
+  factor(test_nn$Churn.Yes, levels=c(0,1))
+)
+
+nn_acc <- nn_cm$overall["Accuracy"]
+
+# Random Forest
+rf_pred <- ifelse(rf_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
+
+rf_cm <- confusionMatrix(rf_pred, test$Churn)
+
+rf_acc <- rf_cm$overall["Accuracy"]
 
 
 
+acc <- data.frame(
+  Model = c("GLM", "Decision Tree", "Neural Net", "Random Forest"),
+  Accuracy = c(glm_acc, tree_acc, nn_acc, rf_acc)
+)
+
+### Plot output
+ggplot(acc, aes(x = Model, y = Accuracy, fill = Model)) +
+  geom_col(color="black") +
+  geom_text(aes(label = sprintf("%.3f", Accuracy)),    
+            vjust = -0.5,                              
+            size = 5) +                               
+  scale_fill_manual(values=c("#1f77b4","#ff7f0e","#2ca02c","#d62728")) +
+  labs(title = "Plot 11: Model Accuracy (Based on Confusion Matrix)",
+       y="Accuracy") +
+  theme_classic(base_size=14) +
+  ylim(0, 1.1)
+
+```
+Plot 11:
+
+- The GLM achieves the highest accuracy (0.813), closely followed by the random
+forest (0.808), while the neural network (0.791) and decision tree (0.787) perform slightly worse. 
+
+- Overall, all models show similar accuracy, with GLM providing the best balance 
+between performance and simplicity.
+
+
+## 4.2 Important Features to Investigate
+
+We also want to investigate what variables have the strongest effect on model's
+decision making. We use random forest model as an example.
+
+```{r}
+
+### Extract importance and convert into data frame
+rf_imp <- importance(rf_model)
+
+rf_imp_df <- data.frame(
+  Feature = rownames(rf_imp),
+  Importance = rf_imp[, 1]    # MeanDecreaseGini
+)
+
+### Rank importance
+rf_imp_df <- rf_imp_df %>% arrange(desc(Importance))
+
+
+### Plot output
+ggplot(rf_imp_df, aes(x = reorder(Feature, Importance), 
+                      y = Importance, 
+                      fill = Importance)) +
+  geom_col(color = "black") +
+  coord_flip() +     
+  scale_fill_gradient(low="#1f77b4", high="#d62728") +  
+  labs(title = "Plot 12: Random Forest Feature Importance",
+       x = "Feature",
+       y = "Mean Decrease in Gini") +
+  theme_classic(base_size = 14)
+
+
+```
+Plot 12:
+
+- The random forest identifies TotalCharges, MonthlyCharges, and tenure as the most
+important predictors of churn, indicating that customer spending and length of
+relationship are the dominant drivers of churn behaviour.
+
+- Contract type is also influential, while demographic and add-on service variables play a relatively smaller role.
+
+In this case, we can make suggestions to the Telecom company about how to reduce 
+customer churn rate:
+
+- Focus on high-charge customers and implement differentiated pricing or promotional
+strategies. TotalCharges and MonthlyCharges are the most influential predictors of churn,
+indicating that customers with higher charges are more likely to develop churn intentions. 
+The company may consider offering personalised discounts, bill reminders, loyalty rewards,
+or instalment payment options to high-spending customers in order to reduce the risk of churn 
+caused by price pressure.
+
+- Strengthen customer service support and improve the user experience.
+Service-quality-related variables such as TechSupport and OnlineSecurity rank highly in
+feature importance, demonstrating that service experience and technical support quality
+have a significant impact on customer retention. The company should improve response
+times, enhance technical support capabilities, and proactively provide services such as
+fault diagnosis and network optimisation to increase customer satisfaction.
+
+- Encourage customers to adopt long-term contracts to improve customer stability.
+Contract type shows relatively high importance, and short-term (month-to-month) customers
+are generally more prone to churn. Companies should promote long-term contracts 
+(such as one- or two-year plans) and offer additional incentives, including lower
+monthly fees, dedicated customer service, or device discounts, to increase customer 
+loyalty and reduce the overall churn rate.
+
+
+## 4.3 Limitations of the Analysis
+
+The analysis has following known limitations of methods, as well as bias in the data
+set :
+
+- Single Train–Test Split: The analysis relies on a single 80:20 train–test split 
+for all models. This means the reported AUC and accuracy results may be sensitive 
+to the specific random split chosen. A different split could lead to noticeably
+different performance.
+
+- Multicollinearity bias: TotalCharges is mechanically linked to tenure and MonthlyCharges, 
+which creates strong multicollinearity. Although this does not affect tree-based models as much,
+it can bias coefficient estimates in GLM and inflate the perceived importance of 
+spending-related variables.
+
+- Limited Model Interpretability: Although random forest and neural networks provide
+strong predictive power, they are effectively “black-box” models. Unlike the GLM, 
+they offer limited transparency in explaining causal relationships, which restricts 
+their usefulness for managerial decision-making and regulatory reporting.
+
+- Class Imbalance: The dataset is imbalanced, with substantially more
+non-churned than churned customers. Accuracy alone may therefore be misleading, 
+since a model could achieve relatively high accuracy by simply predicting the majority class.
+
+- Dataset Bias: The Kaggle Telco Customer Churn dataset is not sourced from a specific
+real telecom company and may be partially simulated. As a result, it may not fully 
+reflect real operational customer behaviour, pricing structures, or competitive
+market conditions, limiting the external validity of the findings.
+
+- Geographical and Demographic Bias: The dataset lacks geographic identifiers and
+detailed socio-economic characteristics. This prevents the detection of regional 
+churn patterns and limits the model’s ability to capture location-based or income-related
+behavioural differences.
+
+
+## 4.4 Conclusion
+
+This study applied multiple classification models to predict customer churn using the Telco Customer Churn dataset. The results show that the GLM achieved the best overall balance between accuracy and generalisation, while the Random Forest provided strong predictive power but exhibited signs of overfitting.
+
+Key predictors of churn were identified as TotalCharges, MonthlyCharges, tenure, and contract type. These findings support practical strategies such as targeting high-charge customers, improving service quality, and promoting long-term contracts to reduce churn. 
+
+Overall, the study demonstrates the value of machine learning methods for effective churn prediction in the telecommunications industry. 
 
 
 
-
-
-
-
-
-
-
-
-
-
+## This is the end of the report, thank you for your time.
+_______________________________________________________
