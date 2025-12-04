@@ -93,8 +93,8 @@ sdata <- sdata %>% dplyr::select(-customerID)
 
 ## 2.2 Exploratory Data Analysis on Churn Data
 
-After initial data explore, we want to have understanding of how the elements
-can be related to each other. Graph is a good method to help to build understanding
+After initial data explore, we want to have a better understanding of how the variables
+are related to each other. Graph is a good method to help to build understanding
 by visualising the correlations.
 
 ```{r}
@@ -491,21 +491,21 @@ In this section, we will compare the model accuracy and suggest company's operat
 strategy based on our analysis.
 
 ```{r}
-# GLM accuracy
+### GLM accuracy
 glm_pred <- ifelse(glm_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
 
 glm_cm <- confusionMatrix(glm_pred, test$Churn)
 
 glm_acc <- glm_cm$overall["Accuracy"]
 
-# Decision Tree
+### Decision Tree
 tree_pred <- ifelse(tree_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
 
 tree_cm <- confusionMatrix(tree_pred, test$Churn)
 
 tree_acc <- tree_cm$overall["Accuracy"]
 
-# Neural Network
+### Neural Network
 nn_pred <- ifelse(nn_test_prob > 0.5, 1, 0)
 
 nn_cm <- confusionMatrix(
@@ -515,7 +515,7 @@ nn_cm <- confusionMatrix(
 
 nn_acc <- nn_cm$overall["Accuracy"]
 
-# Random Forest
+### Random Forest
 rf_pred <- ifelse(rf_test_prob > 0.5, "Yes", "No") %>% factor(levels=c("No","Yes"))
 
 rf_cm <- confusionMatrix(rf_pred, test$Churn)
@@ -563,7 +563,7 @@ rf_imp <- importance(rf_model)
 
 rf_imp_df <- data.frame(
   Feature = rownames(rf_imp),
-  Importance = rf_imp[, 1]    # MeanDecreaseGini
+  Importance = rf_imp[, 1]    
 )
 
 ### Rank importance
@@ -660,7 +660,9 @@ Key predictors of churn were identified as TotalCharges, MonthlyCharges, tenure,
 
 Overall, the study demonstrates the value of machine learning methods for effective churn prediction in the telecommunications industry. 
 
+# 5. Appendix
 
+Please find the Github repository at https://github.com/Jc-Han/MACT6100_Assessment_2
 
-## This is the end of the report, thank you for your time.
-_______________________________________________________
+## This is the end of the report, thank you for your time. 
+__________________________________________________________________________________
