@@ -80,12 +80,95 @@ sum(is.na(sdata$TotalCharges))
 Noticed that 11 N/A values have been removed.
 
 It is sensible to remove "customerID" column, as they are unique identifier of each
-of the customer and are not useful for prediction.
+of the customers and are not useful for prediction.
 ```{r}
 sdata <- sdata %>% dplyr::select(-customerID)
 ```
 
+## 2.2 Exploratory Data Analysis on Churn Data
 
+After initial data explore, we want to have understanding of how the elements
+can be related to each other. Graph is a good method to help to build understanding
+by visualising the correlations.
+
+```{r}
+install.packages("corrplot")
+
+library(ggplot2)
+library(corrplot)
+
+ggplot(sdata, aes(Churn, fill = Churn)) + 
+  geom_bar(color="black") +
+   scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 1: Churn Distribution",
+       y = "Count") +
+  theme_classic(base_size = 14)
+```
+Plot 1: The amount of customer classified as "non-churned" is almost triple than
+those classified as "churn".
+
+```{r}
+ggplot(sdata, aes(Churn, tenure, fill = Churn)) +
+  geom_boxplot(color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 2: Tenure by Churn Status") +
+  theme_classic(base_size = 14)
+```
+Plot 2: The tenure distribution of churned customers (Yes) is clearly lower,
+with most concentrated among short-term users (0–20 months). In contrast,
+non-churned customers generally have much longer usage periods, and long-term
+customers have a lower risk of churn. This indicates that the shorter the usage
+period, the more likely customers are to churn, reflecting the characteristics
+of “new users being less stable and having lower loyalty”.
+
+```{r}
+ggplot(sdata, aes(Churn, MonthlyCharges, fill = Churn)) +
+  geom_boxplot(color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 3: Monthly Charges by Churn Status") +
+  theme_classic(base_size = 14)
+```
+Plot 3: Customers who churn tend to have higher monthly charges than those who
+remain, as shown by the higher median for the churned group. Although there is
+some overlap between the two groups, the overall distribution is shifted upward
+for churned customers, suggesting that higher prices are associated with a greater
+likelihood of churn.
+
+
+```{r}
+ggplot(sdata, aes(Churn, TotalCharges, fill = Churn)) +
+  geom_boxplot(color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#ff7f0e")) +
+  labs(title = "Plot 4: Total Charges by Churn Status",
+       x = "Churn",
+       y = "Total Charges") +
+  theme_classic(base_size = 14)
+```
+Plot 4: Customers who did not churn have much higher total charges on average,
+reflecting longer tenure, while churned customers generally show low total charges,
+indicating early-stage departure. However, the churned group contains several
+high-value outliers, showing that although rare, some long-standing, high-spending
+customers still choose to leave, possibly due to dissatisfaction or external competition.
+
+
+ggplot(sdata, aes(Contract, fill = Churn)) +
+  geom_bar(position = "fill", color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#d62728")) +
+  labs(title = "Plot 5: Churn Rate by Contract Type",
+       y = "Proportion") +
+  theme_classic(base_size = 14)
+
+
+ggplot(sdata, aes(InternetService, fill = Churn)) +
+  geom_bar(position = "fill", color="black") +
+  scale_fill_manual(values=c("No"="#1f77b4", "Yes"="#d62728")) +
+  labs(title = "Plot 6: Churn Rate by Internet Service Type",
+       y = "Proportion") +
+  theme_classic(base_size = 14)
+
+
+
+```
 
 
 
